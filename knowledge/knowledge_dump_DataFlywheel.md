@@ -77,7 +77,7 @@ location ~ ^/v1/models/meta/llama-3\.2-1b-instruct$ {
 ```
 
 **Configuration Applied:**
-Updated [local_scripts/deploy-to-cluster.sh](../local_scripts/deploy-to-cluster.sh#L136-L159) to automatically configure NeMo Evaluator:
+The `make install-flywheel` target in [deploy/Makefile](../deploy/Makefile) automatically configures NeMo Evaluator:
 
 ```bash
 # Configure NeMo Evaluator to use gateway for Entity Store
@@ -136,7 +136,7 @@ oc get deployment nemoevaluator-sample -n $NAMESPACE \
 - Every evaluation job creates secrets but can't clean them up
 
 **Fix Applied:**
-Updated [local_scripts/deploy-to-cluster.sh](../local_scripts/deploy-to-cluster.sh#L142-L152) to automatically fix RBAC permissions:
+The `make install-flywheel` target in [deploy/Makefile](../deploy/Makefile) automatically fixes RBAC permissions:
 
 ```bash
 # Fix RBAC permissions - upstream NeMo Microservices is missing delete permission for secrets
@@ -197,7 +197,7 @@ Cannot read directory '/mount/models/llama32_1b-instruct_2_0'. Reason: [Errno 13
 4. Identified mismatch - pod UID ≠ file owner UID → permission denied
 
 **Fix Applied:**
-Updated [local_scripts/deploy-to-cluster.sh](../local_scripts/deploy-to-cluster.sh#L161-L183) to automatically fix model file permissions:
+The `make install-flywheel` target in [deploy/Makefile](../deploy/Makefile) automatically fixes model file permissions:
 
 ```bash
 # Fix base model file permissions for customization jobs
@@ -293,9 +293,9 @@ location ~ ^/v1/models/meta/llama-3\.2-1b-instruct$ {
 
 ---
 
-## Deployment Script Structure
+## Deployment Automation Structure
 
-The final [local_scripts/deploy-to-cluster.sh](../local_scripts/deploy-to-cluster.sh) script includes these phases:
+The `make install-flywheel` target in [deploy/Makefile](../deploy/Makefile) includes these phases:
 
 ### Phase 1: Deploy Infrastructure Prerequisites
 1. Deploy flywheel-prerequisites Helm chart:
@@ -336,7 +336,7 @@ The final [local_scripts/deploy-to-cluster.sh](../local_scripts/deploy-to-cluste
 
 ## Key Configuration Files
 
-### [deploy/values-openshift.yaml](../deploy/values-openshift.yaml)
+### [deploy/flywheel-components/values-openshift.yaml](../deploy/flywheel-components/values-openshift.yaml)
 
 Configures Data Flywheel for OpenShift with existing infrastructure:
 
@@ -409,13 +409,13 @@ nemo-gateway:
 - RBAC permissions may be reset (missing delete verb)
 - Pod UIDs change, breaking file access
 
-**Solution:** Always run the Data Flywheel deployment script after NeMo Microservices redeployment:
+**Solution:** Always run the Data Flywheel deployment after NeMo Microservices redeployment:
 ```bash
-cd /path/to/Nvidia-data-flywheel
-./local_scripts/deploy-to-cluster.sh
+cd /path/to/Nvidia-data-flywheel/deploy
+make install-flywheel
 ```
 
-The script detects existing installations and reconfigures without reinstalling.
+The Makefile detects existing installations and reconfigures without reinstalling.
 
 ### 2. OpenShift UID Range Management
 
@@ -505,10 +505,10 @@ customized-eval: function_name=0.45, tool_calling_correctness=0.27
 
 ### After Redeploying NeMo Microservices
 
-1. **Run Data Flywheel deployment script**:
+1. **Run Data Flywheel deployment**:
    ```bash
-   cd /path/to/Nvidia-data-flywheel
-   ./local_scripts/deploy-to-cluster.sh
+   cd /path/to/Nvidia-data-flywheel/deploy
+   make install-flywheel
    ```
 
 2. **Verify configurations**:
@@ -580,8 +580,8 @@ customized-eval: function_name=0.45, tool_calling_correctness=0.27
 
 ## References
 
-- [local_scripts/deploy-to-cluster.sh](../local_scripts/deploy-to-cluster.sh) - Main automated deployment script
-- [deploy/values-openshift.yaml](../deploy/values-openshift.yaml) - Data Flywheel OpenShift configuration
+- [deploy/Makefile](../deploy/Makefile) - Main deployment automation
+- [deploy/flywheel-components/values-openshift.yaml](../deploy/flywheel-components/values-openshift.yaml) - Data Flywheel OpenShift configuration
 - [deploy/flywheel-prerequisites/](../deploy/flywheel-prerequisites/) - Infrastructure Helm chart
 - [deploy/flywheel-prerequisites/templates/nemo-gateway-configmap.yaml](../deploy/flywheel-prerequisites/templates/nemo-gateway-configmap.yaml) - Gateway configuration with mock endpoints
 - [knowledge_dump_demo_workflow.md](knowledge_dump_demo_workflow.md) - Demo workflow guide and validation
